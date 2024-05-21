@@ -2,7 +2,8 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import styled from "styled-components";
 
 import { formatCurrency } from "../../utils/helpers";
-import { DeleteCabins } from "../../services/apiCabins";
+import { deleteCabin } from "../../services/apiCabins";
+import toast from "react-hot-toast";
 
 // styled components
 const TableRow = styled.div`
@@ -57,17 +58,19 @@ function CabinRow({ cabin }) {
   } = cabin;
 
   const { isLoading: isDeleting, mutate } = useMutation({
-    mutationFn: DeleteCabins,
+    mutationFn: deleteCabin,
     onSuccess: () => {
+      toast.success("cabin successfully deleted");
       queryClient.invalidateQueries({
         queryKey: ["cabin"],
       });
     },
+    onError: (err) => toast.error(err.messagr),
   });
 
   return (
     <TableRow role="row">
-      <Img src={image} alt="cabin-image" />
+      <Img src={image} alt="cabin " />
       <Cabin>{name}</Cabin>
       <div>Fits up to {maxCapacity} guests</div>
       <Price>{formatCurrency(regularPrice)}</Price>
