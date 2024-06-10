@@ -8,21 +8,27 @@ export async function getCabins() {
   return cabins;
 }
 
-export async function createCabin(newCabin) {
+export async function CreateEditCabin(newCabin, id) {
+  const hasImagePath = newCabin.image?.startsWith?.(supabaseUrl);
   const imageName = `${Math.random()}-${newCabin.image.name}`.replaceAll(
     "/",
     ""
   );
-  const imagePath = `${supabaseUrl}/storage/v1/object/public/cabin-images/${imageName}`;
-  const { error: storageError } = await supabase
-    .from("cabins")
-    .insert([{ ...newCabin, image: imagePath }]);
+  const imagePath = hasImagePath
+    ? newCabin.image
+    : `${supabaseUrl}/storage/v1/object/public/cabin-images/${imageName}`;
+
+  let query = supabase.from("cabins");
+  if (!id) query = query.insert([{ ...newCabin, image: imagePath }]);
+  if (id) query = query.update([{ ...newCabin, image: imagePath }]);
+
+  const { data, error } = await query.select().single();
+
   if (error) {
     throw new Error("Cabin could not be created");
   }
 
-  // const avatarFile = event.target.files[0];
-  const { data, error } = await supabase.storage
+  const { error: storageError } = await supabase.storage
     .from("cabin-images")
     .upload(imageName, newCabin.image);
 
